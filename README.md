@@ -1,6 +1,6 @@
-# Backend RAG para Ministério Público
+# Backend RAG
 
-Backend FastAPI para orquestrar RAG (ingestão, busca semântica, LLM via OpenAI) sem frontend e sem autenticação. Pensado para ser endurecido depois com governança, auditoria e controles de acesso.
+Backend FastAPI para orquestrar RAG (ingestão, busca semântica, LLM via OpenAI)
 
 ## Arquitetura
 
@@ -23,7 +23,7 @@ Fluxo resumido:
 
 ## Rodando localmente
 
-1. Crie e ative um venv (opcional, mas recomendado):
+1. Crie e ative um venv:
    - macOS/Linux: `python -m venv .venv && source .venv/bin/activate`
    - Windows (PowerShell): `python -m venv .venv; .venv\\Scripts\\Activate.ps1`
 2. Instale dependências (com o venv ativo): `pip install -r requirements.txt`.
