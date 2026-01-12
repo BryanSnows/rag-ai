@@ -34,6 +34,14 @@ Fluxo resumido:
    - ou, se o venv estiver ativado: `uvicorn app.main:app --reload`
 6. Swagger: `http://localhost:8000/docs` (API institucional) e `http://localhost:8000/redoc`.
 
+Reabrindo o terminal (sem reinstalar deps):
+
+```bash
+cd /Users/bryanneves/Documents/indt/VITORIA/rag-backend
+source .venv/bin/activate
+.venv/bin/uvicorn app.main:app --reload
+```
+
 Variáveis suportadas (ver `.env.example`):
 
 - `APP_NAME`, `APP_VERSION`, `VECTOR_DIM`, `MAX_CONTEXT_CHARS`, `TEMPERATURE`.
