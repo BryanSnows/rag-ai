@@ -30,14 +30,18 @@ class VitoriaLLMClient:
                 "role": "system",
                 "content": (
                     "Você é a Vitoria-AI, assistente proprietária. Responda em português, "
-                    "cite trechos do contexto e seja conciso. Não invente fontes."
+                    "seja curta (2-4 frases) e cite apenas trechos relevantes do contexto. "
+                    "Se o contexto não trouxer nada útil ou a pergunta for fora do tema, diga que não há "
+                    "informação relevante e não invente. Não repita o contexto inteiro, apenas referencie. "
+                    "Retorne somente a resposta final, sem repetir instruções ou o contexto."
                 ),
             },
             {
                 "role": "user",
                 "content": (
                     f"Pergunta: {question}\n\nContexto:\n{context}\n\n"
-                    "Responda de forma objetiva, citando o que vier do contexto."
+                    "Responda de forma objetiva, só usando o que houver de relevante no contexto. "
+                    "Não repita o contexto; apenas responda."
                 ),
             },
         ]
@@ -61,7 +65,18 @@ class VitoriaLLMClient:
             choices = data.get("choices") or []
             first = choices[0] if choices else {}
             message = first.get("message") or {}
-            content = message.get("content")
-            return content or "Resposta vazia retornada pela Vitoria-AI."
+            content = message.get("content") or ""
+            cleaned = self._clean_response(content)
+            return cleaned or "Resposta vazia retornada pela Vitoria-AI."
         except Exception as exc:  # pragma: no cover - rede externa
             return f"Falha ao chamar Vitoria-AI: {exc}"
+
+    @staticmethod
+    def _clean_response(content: str) -> str:
+        text = content.strip()
+        # Se o modelo ecoar prompt (contendo Pergunta/Contexto), tente pegar só o último bloco
+        if "Pergunta:" in text or "Contexto:" in text:
+            parts = [p.strip() for p in text.split("\n\n") if p.strip()]
+            if parts:
+                text = parts[-1]
+        return text

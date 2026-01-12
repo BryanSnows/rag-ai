@@ -59,9 +59,29 @@ class RAGPipeline:
 
     def query(self, question: str, top_k: int = 3) -> Tuple[str, List[StoredDocument], List[float]]:
         query_emb = self.embedder.embed(question)
-        results = self.vector_store.similarity_search(query_emb, top_k=top_k)
-        documents = [doc for doc, _ in results]
-        scores = [score for _, score in results]
+        results = self.vector_store.similarity_search(query_emb, top_k=top_k * 2)
+        similarity_threshold = 0.2
+        seen = set()
+        documents: List[StoredDocument] = []
+        scores: List[float] = []
+
+        for doc, score in results:
+            key = (doc.document_id, doc.metadata.get("chunk_index"))
+            if score < similarity_threshold or key in seen:
+                continue
+            seen.add(key)
+            documents.append(doc)
+            scores.append(score)
+            if len(documents) >= top_k:
+                break
+
+        if not documents:
+            return (
+                "Não encontrei nada relevante nos documentos para responder a isso.",
+                [],
+                [],
+            )
+
         context_chunks = []
         total_len = 0
         for doc in documents:
