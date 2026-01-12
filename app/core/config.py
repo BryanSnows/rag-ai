@@ -10,6 +10,13 @@ class Settings(BaseSettings):
     vitoria_model: str = "vitoria-ai"
     vitoria_api_key: str | None = None
     vitoria_base_url: str = "http://localhost:9000"
+    # Vector/Document stores
+    qdrant_url: str | None = None
+    qdrant_api_key: str | None = None
+    qdrant_collection: str = "rag_vectors"
+    mongo_uri: str | None = None
+    mongo_db: str = "rag"
+    mongo_collection: str = "documents"
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 

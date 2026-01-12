@@ -4,19 +4,23 @@ from uuid import uuid4
 from .embeddings import SimpleEmbedder
 from .llm import VitoriaLLMClient
 from .vector_store import InMemoryVectorStore, StoredDocument
+from .vector_store_qdrant import QdrantVectorStore
+from .document_store import MongoDocumentStore
 
 
 class RAGPipeline:
     def __init__(
         self,
         embedder: SimpleEmbedder,
-        vector_store: InMemoryVectorStore,
+        vector_store: InMemoryVectorStore | QdrantVectorStore,
         llm: VitoriaLLMClient,
+        document_store: MongoDocumentStore | None = None,
         max_context_chars: int = 2000,
     ) -> None:
         self.embedder = embedder
         self.vector_store = vector_store
         self.llm = llm
+        self.document_store = document_store
         self.max_context_chars = max_context_chars
 
     def _chunk_text(self, text: str, chunk_size: int = 500) -> List[str]:
@@ -37,6 +41,8 @@ class RAGPipeline:
     ) -> Tuple[str, int]:
         doc_id = source_id or str(uuid4())
         metadata = metadata or {}
+        if self.document_store:
+            self.document_store.save_document(doc_id, content, metadata)
         chunks = self._chunk_text(content)
         embeddings = self.embedder.embed_batch(chunks)
         stored = [
