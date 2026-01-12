@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Tuple
 from uuid import uuid4
 
 from .embeddings import SimpleEmbedder
-from .llm import LLMClient
+from .llm import VitoriaLLMClient
 from .vector_store import InMemoryVectorStore, StoredDocument
 
 
@@ -11,7 +11,7 @@ class RAGPipeline:
         self,
         embedder: SimpleEmbedder,
         vector_store: InMemoryVectorStore,
-        llm: LLMClient,
+        llm: VitoriaLLMClient,
         max_context_chars: int = 2000,
     ) -> None:
         self.embedder = embedder

@@ -1,10 +1,10 @@
 from typing import List, Optional
 
-from openai import OpenAI
+import httpx
 
 
-class LLMClient:
-    """Cliente de LLM baseado em OpenAI; mantém contrato simples de geração."""
+class VitoriaLLMClient:
+    """Cliente HTTP para a Vitoria-AI (contrato compatível com chat/completions)."""
 
     def __init__(
         self,
@@ -12,27 +12,25 @@ class LLMClient:
         api_key: Optional[str],
         base_url: Optional[str] = None,
         temperature: float = 0.0,
+        timeout: float = 30.0,
     ) -> None:
         self.model_name = model_name
         self.temperature = temperature
         self.api_key = api_key
-        self.base_url = base_url
-        self.client = OpenAI(api_key=api_key, base_url=base_url) if api_key else None
+        self.base_url = base_url.rstrip("/") if base_url else None
+        self.timeout = timeout
 
     def generate(self, question: str, context_chunks: List[str], max_tokens: int = 256) -> str:
-        if not context_chunks:
-            return "Nenhum contexto encontrado para responder."
+        if not self.base_url:
+            return "Vitoria-AI não configurada (defina VITORIA_BASE_URL)."
 
-        if not self.client:
-            return "LLM OpenAI não configurada (defina OPENAI_API_KEY)."
-
-        context = "\n---\n".join(context_chunks)
+        context = "\n---\n".join(context_chunks) if context_chunks else "(Sem contexto fornecido)"
         messages = [
             {
                 "role": "system",
                 "content": (
-                    "Você é um assistente do Ministério Público. Responda em português, "
-                    "cite fatos do contexto e mantenha concisão. Não invente fontes."
+                    "Você é a Vitoria-AI, assistente proprietária. Responda em português, "
+                    "cite trechos do contexto e seja conciso. Não invente fontes."
                 ),
             },
             {
@@ -44,13 +42,26 @@ class LLMClient:
             },
         ]
 
+        payload = {
+            "model": self.model_name,
+            "messages": messages,
+            "max_tokens": max_tokens,
+            "temperature": self.temperature,
+        }
+
+        headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
         try:
-            completion = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=messages,
-                max_tokens=max_tokens,
-                temperature=self.temperature,
-            )
-            return completion.choices[0].message.content or ""
+            url = f"{self.base_url}/v1/chat/completions"
+            response = httpx.post(url, json=payload, headers=headers, timeout=self.timeout)
+            response.raise_for_status()
+            data = response.json()
+            choices = data.get("choices") or []
+            first = choices[0] if choices else {}
+            message = first.get("message") or {}
+            content = message.get("content")
+            return content or "Resposta vazia retornada pela Vitoria-AI."
         except Exception as exc:  # pragma: no cover - rede externa
-            return f"Falha ao chamar LLM: {exc}"
+            return f"Falha ao chamar Vitoria-AI: {exc}"
